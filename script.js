@@ -16,7 +16,7 @@ function init() {
   const themeToggle = document.getElementById('theme-toggle');
   const body = document.body;
 
-  let applications = JSON.parse(localStorage.getItem('applications')) || [];
+  const applications = JSON.parse(localStorage.getItem('applications')) || [];
   renderTable();
 
   const currentTheme = localStorage.getItem('theme') || 'light';
