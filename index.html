@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bewerbungstracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <button id="theme-toggle" class="theme-toggle-button">Dark Mode</button>
+  <div class="container">
+    <h1>Bewerbungstracker</h1>
+
+    <div class="add-application">
+      <h2>Füge neue Bewerbung hinzu:</h2>
+      <form id="add-form">
+        <label for="company">Company:</label>
+        <input type="text" id="company" name="company" required><br><br>
+
+        <label for="position">Position:</label>
+        <input type="text" id="position" name="position" required><br><br>
+
+        <label for="date">Date Applied:</label>
+        <input type="date" id="date" name="date" required><br><br>
+
+        <label for="status">Status:</label>
+        <select id="status" name="status">
+          <option value="Applied">Applied</option>
+          <option value="Interviewing">Interviewing</option>
+          <option value="Offer">Offer</option>
+          <option value="Rejected">Rejected</option>
+        </select><br><br>
+
+        <label for="description-link">Link to Description:</label>
+        <input type="text" id="description-link" name="description-link"><br><br>
+
+        <button type="submit">Hinzufügen</button>
+      </form>
+    </div>
+
+    <div class="application-list">
+      <h2>Current Applications</h2>
+      <table id="application-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Position</th>
+            <th>Date Applied</th>
+            <th>Status</th>
+            <th>Link to Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    <p class="animated-copyright">&copy; <span id="current-year"></span> Michael Koch</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
