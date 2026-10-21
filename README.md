@@ -1,42 +1,54 @@
-# Bewerbungtracker
+# Bewerbungstracker
 
+Eine kleine Web-App, um Bewerbungen an einem Ort zu sammeln und ihren Status im Blick zu behalten. Die Daten bleiben im Browser – ohne Konto, Backend oder Datenbank.
 
-Ein einfacher Bewerbungstracker, der es ermöglicht, Bewerbungen zu verwalten und den Status zu verfolgen. Die Anwendung unterstützt das Hinzufügen, Bearbeiten und Löschen von Bewerbungen sowie das Umschalten zwischen einem hellen und einem dunklen Modus.
+**HTML · CSS · JavaScript · localStorage**
+
+![Bewerbungstracker mit Formular und Bewerbungsübersicht](docs/screenshot.png)
 
 ## Funktionen
 
-- Hinzufügen neuer Bewerbungen
-- Bearbeiten bestehender Bewerbungen
-- Löschen von Bewerbungen
-- Umschalten zwischen hellem und dunklem Modus
-- Speicherung der Bewerbungen und des Themas im `localStorage`
+- Bewerbungen mit Unternehmen, Position, Datum, Status und optionalem Link erfassen.
+- Vorhandene Einträge zum Bearbeiten in das Formular übernehmen.
+- Zwischen Hell- und Dunkelmodus wechseln.
+- Bewerbungen und Farbschema im `localStorage` des Browsers speichern.
 
-## Installation
+## Lokal starten
 
-1. Klone das Repository oder lade die Dateien herunter.
-2. Öffne die Datei `index.html` in deinem bevorzugten Webbrowser.
+```bash
+git clone https://github.com/michkffm/Bewerbungtracker.git
+cd Bewerbungtracker
+```
 
-## Verwendung
+Anschließend `index.html` im Browser öffnen. Es sind keine Paketinstallation und kein Build erforderlich. Alternativ mit installiertem Python:
 
-1. Fülle das Formular "Füge neue Bewerbung hinzu" aus und klicke auf "Hinzufügen", um eine neue Bewerbung hinzuzufügen.
-2. Die hinzugefügten Bewerbungen werden in der Tabelle "Current Applications" angezeigt.
-3. Verwende die Schaltflächen "Edit" und "Delete" in der Tabelle, um Bewerbungen zu bearbeiten oder zu löschen.
-4. Klicke auf die Schaltfläche "Dark Mode" oben auf der Seite, um zwischen hellem und dunklem Modus zu wechseln.
+```bash
+python3 -m http.server 8000 --bind 127.0.0.1
+```
 
-## Dateien
+Dann [localhost:8000](http://localhost:8000) öffnen. Die Adresse sollte gleich bleiben, damit der Browser auf denselben lokalen Speicher zugreift.
 
-- `index.html`: Die Haupt-HTML-Datei der Anwendung.
-- `style.css`: Die CSS-Datei für das Styling der Anwendung.
-- `script.js`: Die JavaScript-Datei für die Funktionalität der Anwendung.
+## Aufbau und technische Schwerpunkte
 
-## Lizenz
+| Datei | Aufgabe |
+| --- | --- |
+| `index.html` | Formular und Bewerbungstabelle |
+| `style.css` | Darstellung und Farbmodi |
+| `script.js` | Formularereignisse, Tabellenaufbau und lokaler Speicher |
 
-Diese Anwendung ist unter der MIT-Lizenz lizenziert. Weitere Informationen findest du in der Datei `LICENSE`.
+Das Projekt zeigt DOM-Manipulation, Ereignisbehandlung und das Speichern strukturierter Daten als JSON. Autor laut Quelltext: Michael Koch.
 
-## Autor
+## Aktueller Stand
 
-Michael Koch
+Die Oberfläche wurde am 21. Oktober 2026 lokal geöffnet; der Screenshot zeigt den unveränderten leeren Startzustand. Eine öffentliche Live-Demo ist nicht verifiziert.
 
-## Jahr
+- Die Löschfunktion ist angelegt, scheitert derzeit aber an der Neuzuweisung einer mit `const` deklarierten Liste.
+- Es gibt keine Synchronisation und keinen Export. Gelöschte Browserdaten entfernen auch die gespeicherten Bewerbungen.
+- Formular und Tabelle mischen deutsche und englische Beschriftungen.
+- Eine automatisierte Testsuite ist nicht vorhanden. Externe Stellenlinks sind vor einem produktiven Einsatz auf erlaubte URL-Protokolle zu begrenzen.
 
-2025
+## Lizenz und Kontakt
+
+Die bisherige Projektbeschreibung und der Quelltext nennen MIT; eine separate `LICENSE`-Datei ist im Repository derzeit nicht enthalten.
+
+[Michael Koch auf GitHub](https://github.com/michkffm) · [Interaktives Portfolio](https://michael-koch-portfolio.onrender.com/)
