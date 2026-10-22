@@ -2,9 +2,11 @@ body {
   font-family: sans-serif;
   background-color: #f4f4f4;
   margin: 0;
-  padding: 0;
   transition: background-color 0.3s, color 0.3s;
   display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 80px 16px 20px;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
@@ -66,6 +68,7 @@ body.dark label {
 }
 
 input[type="text"],
+input[type="url"],
 input[type="date"],
 select {
   width: 200px;
@@ -77,6 +80,7 @@ select {
 }
 
 body.dark input[type="text"],
+body.dark input[type="url"],
 body.dark input[type="date"],
 body.dark select {
   background-color: #555;
@@ -215,4 +219,24 @@ body.dark .delete-btn:hover {
 @keyframes fadeIn {
   0% { opacity: 0; }
   100% { opacity: 1; }
+}
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+  outline: 3px solid #1976d2;
+  outline-offset: 3px;
+}
+
+#message { overflow-wrap: anywhere; }
+td { overflow-wrap: anywhere; max-width: 250px; }
+.actions button { margin-bottom: 5px; }
+
+@media (max-width: 600px) {
+  .container { width: 100%; box-sizing: border-box; padding: 12px; }
+  label { display: block; width: auto; text-align: left; margin-bottom: 5px; }
+  input[type="text"], input[type="url"], input[type="date"], select {
+    width: 100%; box-sizing: border-box;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }

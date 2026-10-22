@@ -1,148 +1,182 @@
 /**
- * @file script.js
- * @description Script for managing job applications.
  * @author Michael Koch
- * @copyright © Michael Koch
  * @license MIT
- * @version 1.0.0
- * @date 2025
  */
-
 document.addEventListener('DOMContentLoaded', init);
 
 function init() {
   const form = document.getElementById('add-form');
-  const tableBody = document.getElementById('application-table').querySelector('tbody');
+  const tableBody = document.querySelector('#application-table tbody');
   const themeToggle = document.getElementById('theme-toggle');
-  const body = document.body;
+  const submitButton = form.querySelector('[type="submit"]');
+  const cancelButton = document.getElementById('cancel-edit');
+  const message = document.getElementById('message');
+  const statuses = { Applied: 'Beworben', Interviewing: 'Vorstellungsgespräch', Offer: 'Angebot', Rejected: 'Absage' };
+  let applications = [];
+  let editingId = null;
+  let storageReadable = true;
 
-  const applications = JSON.parse(localStorage.getItem('applications')) || [];
-  renderTable();
-
-  const currentTheme = localStorage.getItem('theme') || 'light';
-  body.classList.add(currentTheme);
-  themeToggle.textContent = currentTheme === 'light' ? 'Dark Mode' : 'Light Mode';
-
-  themeToggle.addEventListener('click', toggleTheme);
-
-  form.addEventListener('submit', submitHandler);
-
-  function toggleTheme() {
-    body.classList.toggle('light');
-    body.classList.toggle('dark');
-    const newTheme = body.classList.contains('dark') ? 'dark' : 'light';
-    themeToggle.textContent = newTheme === 'light' ? 'Dark Mode' : 'Light Mode';
-    localStorage.setItem('theme', newTheme);
+  function notify(text) {
+    message.textContent = text;
   }
 
-  function submitHandler(event) {
+  function safeUrl(value) {
+    try {
+      const url = new URL(value);
+      return ['http:', 'https:'].includes(url.protocol) ? url.href : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function validApplication(app) {
+    return app !== null && typeof app === 'object'
+      && ['id', 'company', 'position', 'date', 'status'].every(key => typeof app[key] === 'string')
+      && app.id.length > 0 && app.company.trim().length > 0 && app.position.trim().length > 0
+      && /^\d{4}-\d{2}-\d{2}$/.test(app.date)
+      && Object.hasOwn(statuses, app.status)
+      && (app.descriptionLink === undefined || typeof app.descriptionLink === 'string');
+  }
+
+  try {
+    const stored = JSON.parse(localStorage.getItem('applications') || '[]');
+    if (!Array.isArray(stored) || !stored.every(validApplication)
+      || new Set(stored.map(app => app.id)).size !== stored.length) {
+      throw new Error('Invalid stored applications');
+    }
+    applications = stored;
+  } catch {
+    storageReadable = false;
+    notify('Gespeicherte Bewerbungen konnten nicht geladen werden. Die vorhandenen Daten werden nicht überschrieben. Bitte prüfe den Browserspeicher.');
+  }
+
+  function save(nextApplications) {
+    if (!storageReadable) {
+      notify('Speichern ist gesperrt, da vorhandene Browserdaten nicht geladen werden konnten.');
+      return false;
+    }
+    try {
+      localStorage.setItem('applications', JSON.stringify(nextApplications));
+      applications = nextApplications;
+      return true;
+    } catch {
+      notify('Speichern fehlgeschlagen. Bitte prüfe den verfügbaren Browserspeicher. Deine Eingaben bleiben im Formular.');
+      return false;
+    }
+  }
+
+  function setTheme(theme) {
+    document.body.classList.toggle('dark', theme === 'dark');
+    document.body.classList.toggle('light', theme !== 'dark');
+    themeToggle.textContent = theme === 'dark' ? 'Hellmodus' : 'Dunkelmodus';
+    themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+  }
+
+  let theme = 'light';
+  try {
+    theme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+  } catch {
+    notify('Der Browserspeicher ist nicht verfügbar. Änderungen können nicht dauerhaft gespeichert werden.');
+  }
+  setTheme(theme);
+  themeToggle.addEventListener('click', () => {
+    const nextTheme = document.body.classList.contains('dark') ? 'light' : 'dark';
+    setTheme(nextTheme);
+    try {
+      localStorage.setItem('theme', nextTheme);
+    } catch {
+      notify('Das Farbschema konnte nicht dauerhaft gespeichert werden.');
+    }
+  });
+
+  function resetForm() {
+    editingId = null;
+    form.reset();
+    submitButton.textContent = 'Hinzufügen';
+    cancelButton.hidden = true;
+  }
+
+  cancelButton.addEventListener('click', resetForm);
+  form.addEventListener('submit', event => {
     event.preventDefault();
-
-    const company = document.getElementById('company').value;
-    const position = document.getElementById('position').value;
-    const date = document.getElementById('date').value;
-    const status = document.getElementById('status').value;
-    const descriptionLink = document.getElementById('description-link').value;
-
-    if (!company || !position || !date || !status) {
-      alert('Bitte fülle die Felder aus.');
+    const company = form.elements.company.value.trim();
+    const position = form.elements.position.value.trim();
+    const date = form.elements.date.value;
+    const status = form.elements.status.value;
+    const descriptionLink = form.elements['description-link'].value.trim();
+    if (!company || !position || !date || !Object.hasOwn(statuses, status)) {
+      notify('Bitte fülle alle Pflichtfelder aus.');
       return;
     }
-
-    const newApplication = {
-      id: generateId(),
-      company: company,
-      position: position,
-      date: date,
-      status: status,
-      descriptionLink: descriptionLink
-    };
-
-    applications.push(newApplication);
-    localStorage.setItem('applications', JSON.stringify(applications));
-
+    if (descriptionLink && !safeUrl(descriptionLink)) {
+      notify('Bitte verwende einen vollständigen Link mit http:// oder https://.');
+      return;
+    }
+    const application = { id: editingId || Array.from(crypto.getRandomValues(new Uint32Array(4)), value => value.toString(16).padStart(8, '0')).join(''), company, position, date, status, descriptionLink };
+    const nextApplications = editingId
+      ? applications.map(app => app.id === editingId ? application : app)
+      : [...applications, application];
+    if (!save(nextApplications)) return;
+    resetForm();
     renderTable();
-    form.reset();
-  }
+    notify('Bewerbung gespeichert.');
+  });
 
-  function renderTable() {
-    tableBody.innerHTML = ''; // Clear existing table rows
-    applications.forEach(app => {
-      const row = tableBody.insertRow();
-
-      const companyCell = row.insertCell();
-      const positionCell = row.insertCell();
-      const dateCell = row.insertCell();
-      const statusCell = row.insertCell();
-      const descriptionCell = row.insertCell();
-      const actionsCell = row.insertCell();
-
-      companyCell.textContent = app.company;
-      positionCell.textContent = app.position;
-      dateCell.textContent = app.date;
-      statusCell.textContent = app.status;
-      descriptionCell.innerHTML = app.descriptionLink ? `<a href="${app.descriptionLink}" target="_blank">Link</a>` : '';
-
-      actionsCell.classList.add('actions');
-      actionsCell.innerHTML = `
-        <button class="edit-btn" data-id="${app.id}">Edit</button>
-        <button class="delete-btn" data-id="${app.id}">Delete</button>
-      `;
-
-      row.querySelector('.edit-btn').addEventListener('click', function() {
-        editApplication(app.id);
-      });
-
-      row.querySelector('.delete-btn').addEventListener('click', function() {
-        deleteApplication(app.id);
-      });
-    });
-  }
-
-  function generateId() {
-    return '_' + Math.random().toString(36).substr(2, 9);
-  }
-
-  function editApplication(id) {
-    const application = applications.find(app => app.id === id);
-
-    document.getElementById('company').value = application.company;
-    document.getElementById('position').value = application.position;
-    document.getElementById('date').value = application.date;
-    document.getElementById('status').value = application.status;
-    document.getElementById('description-link').value = application.descriptionLink;
-
-    const submitButton = form.querySelector('button[type="submit"]');
-    submitButton.textContent = 'Update Application';
-
-    form.removeEventListener('submit', submitHandler);
-    form.addEventListener('submit', function updateHandler(event) {
-      event.preventDefault();
-
-      application.company = document.getElementById('company').value;
-      application.position = document.getElementById('position').value;
-      application.date = document.getElementById('date').value;
-      application.status = document.getElementById('status').value;
-      application.descriptionLink = document.getElementById('description-link').value;
-
-      localStorage.setItem('applications', JSON.stringify(applications));
-
-      renderTable();
-
-      form.reset();
-      submitButton.textContent = 'Add Application';
-      form.removeEventListener('submit', updateHandler);
-      form.addEventListener('submit', submitHandler);
-    });
+  function editApplication(app) {
+    editingId = app.id;
+    for (const key of ['company', 'position', 'date', 'status']) form.elements[key].value = app[key];
+    form.elements['description-link'].value = app.descriptionLink || '';
+    submitButton.textContent = 'Änderungen speichern';
+    cancelButton.hidden = false;
+    form.elements.company.focus();
   }
 
   function deleteApplication(id) {
-    applications = applications.filter(app => app.id !== id);
-    localStorage.setItem('applications', JSON.stringify(applications));
+    if (!save(applications.filter(app => app.id !== id))) return;
+    if (editingId === id) resetForm();
     renderTable();
+    notify('Bewerbung gelöscht.');
   }
+
+  function renderTable() {
+    tableBody.replaceChildren();
+    if (applications.length === 0) {
+      const cell = tableBody.insertRow().insertCell();
+      cell.colSpan = 6;
+      cell.textContent = storageReadable ? 'Noch keine Bewerbungen vorhanden.' : 'Bewerbungen konnten nicht geladen werden.';
+    }
+    for (const app of applications) {
+      const row = tableBody.insertRow();
+      for (const value of [app.company, app.position, app.date, statuses[app.status]]) {
+        row.insertCell().textContent = value;
+      }
+      const linkCell = row.insertCell();
+      const url = safeUrl(app.descriptionLink);
+      if (url) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'Stellenanzeige';
+        linkCell.append(link);
+      }
+      const actionsCell = row.insertCell();
+      actionsCell.className = 'actions';
+      for (const [label, className, action] of [
+        ['Bearbeiten', 'edit-btn', () => editApplication(app)],
+        ['Löschen', 'delete-btn', () => deleteApplication(app.id)]
+      ]) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = className;
+        button.textContent = label;
+        button.setAttribute('aria-label', `${label}: ${app.company}, ${app.position}`);
+        button.addEventListener('click', action);
+        actionsCell.append(button);
+      }
+    }
+  }
+
+  renderTable();
+  document.getElementById('current-year').textContent = new Date().getFullYear();
 }
-document.addEventListener('DOMContentLoaded', function() {
-  const currentYear = new Date().getFullYear();
-  document.getElementById('current-year').textContent = currentYear;
-});
